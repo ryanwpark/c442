@@ -1,6 +1,6 @@
 import os
 from flask import Flask, redirect, url_for
-from dashboard_view import dashboard_blueprint
+from view.dashboard_view import dashboard_blueprint
 
 app = Flask(__name__)
 
