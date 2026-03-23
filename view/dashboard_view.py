@@ -19,6 +19,7 @@ TODO: Connect to Controller once expense controller functions are implemented.
 
 from flask import Blueprint, request, render_template_string, redirect, url_for
 from datetime import datetime, timedelta
+from controller import get_dashboard_data
 
 # Blueprint for dashboard routes
 dashboard_blueprint = Blueprint("dashboard", __name__)
@@ -74,13 +75,14 @@ def _compute_summaries(expenses):
     daily_total = 0.0
 
     for exp in expenses:
-        exp_date = datetime.strptime(exp["date"], "%Y-%m-%d").date()
+        exp_date = exp["date"]
+        cost = float(exp["cost"])
         if exp_date >= start_of_month:
-            monthly_total += exp["cost"]
+            monthly_total += cost
         if exp_date >= start_of_week:
-            weekly_total += exp["cost"]
+            weekly_total += cost
         if exp_date == today:
-            daily_total += exp["cost"]
+            daily_total += cost
 
     return {
         "monthly": round(monthly_total, 2),
@@ -515,7 +517,7 @@ def show_dashboard():
     GET /dashboard
     Show the expense dashboard with summaries and expense list.
     """
-    expenses = _get_all_expenses()
+    expenses = get_dashboard_data(1, "2026-03")
     summary = _compute_summaries(expenses)
     today = datetime.today().strftime("%Y-%m-%d")
 
