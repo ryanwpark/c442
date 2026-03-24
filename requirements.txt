@@ -1,3 +1,4 @@
+prometheus-flask-exporter
 blinker==1.9.0
 click==8.3.1
 DateTime==6.0
