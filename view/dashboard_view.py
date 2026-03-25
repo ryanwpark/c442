@@ -19,7 +19,7 @@ TODO: Connect to Controller once expense controller functions are implemented.
 
 from flask import Blueprint, request, render_template_string, redirect, url_for
 from datetime import datetime, timedelta
-from controller import get_dashboard_data, add_expense, update_transaction, delete_transaction
+from controller import get_user_expenses, add_expense, update_transaction, delete_transaction
 
 # Blueprint for dashboard routes
 dashboard_blueprint = Blueprint("dashboard", __name__)
@@ -500,7 +500,7 @@ def show_dashboard():
     GET /dashboard
     Show the expense dashboard with summaries and expense list.
     """
-    expenses = get_dashboard_data(1, "2026-03")
+    expenses = get_user_expenses(1, "2026-03")
     summary = _compute_summaries(expenses)
     today = datetime.today().strftime("%Y-%m-%d")
 
