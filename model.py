@@ -84,4 +84,14 @@ class BudgetModel:
         self.conn.commit()
         return self.cursor.lastrowid
 
+    def update_transaction(self, transaction_id, category_id, amount, merchant_name, transaction_date):
+        sql = "UPDATE transactions SET category_id = %s, amount = %s, merchant_name = %s, transaction_date = %s WHERE transaction_id = %s"
+        self.cursor.execute(sql, (category_id, amount, merchant_name, transaction_date, transaction_id))
+        self.conn.commit()
+        return self.cursor.rowcount
 
+    def delete_transaction(self, transaction_id):
+        sql = "DELETE FROM transactions WHERE transaction_id = %s"
+        self.cursor.execute(sql, (transaction_id,))
+        self.conn.commit()
+        return self.cursor.rowcount
