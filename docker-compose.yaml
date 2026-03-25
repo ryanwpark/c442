@@ -48,8 +48,6 @@ services:
     image: grafana/grafana
     container_name: grafana
     restart: always
-    ports:
-      - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_SERVER_ROOT_URL=http://${GRAFANA_HOST}/grafana/
