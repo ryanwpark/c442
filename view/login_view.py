@@ -13,7 +13,7 @@ It only:
   3. Displays the result message back to the user
 """
 
-from flask import Blueprint, request, render_template_string, redirect
+from flask import Blueprint, request, render_template_string, redirect, session
 from controller import login_user
 
 # Blueprint for login routes
@@ -199,7 +199,8 @@ def handle_login():
 
     # Step 3: If login succeeded, redirect to the home page
     if result["success"]:
-        return redirect("/home")
+        session['user_id'] = result["user_id"]
+        return redirect("/dashboard")
 
     # If login failed, show the form again with the error message
     return render_template_string(

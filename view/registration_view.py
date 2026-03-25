@@ -13,7 +13,7 @@ It only:
   3. Displays the result message back to the user
 """
 
-from flask import Blueprint, request, render_template_string
+from flask import Blueprint, request, render_template_string, redirect, url_for
 from controller import register_user
 
 view_blueprint = Blueprint("view", __name__)
@@ -179,6 +179,12 @@ def handle_register():
 
     # Step 2: Send it to the controller (the controller does all the logic)
     result = register_user(username, password, verify_password)
+
+    if result["success"]:
+        # Redirect to login with a success message
+        return redirect(url_for("login.show_login_form",
+                                message=result["message"],
+                                success="true"))
 
     # Step 3: Show the form again with the success/error message
     return render_template_string(

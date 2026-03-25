@@ -70,22 +70,47 @@ class BudgetModel:
     #--- Transactions ---
 
     def get_user_expenses(self, user_id, month):
-        sql = "SELECT u.username,t.transaction_id, t.merchant_name AS name, c.cat_name AS category, t.amount as cost, t.transaction_date AS date \
+        sql = "SELECT t.transaction_id, t.merchant_name AS name, c.cat_name AS category, t.amount as cost, t.transaction_date AS date \
         FROM transactions t JOIN category c ON t.category_id = c.category_id \
         JOIN budget b ON c.budget_id = b.budget_id \
-        JOIN user u ON b.user_id = u.user_id \
-        WHERE u.user_id = %s AND b.month_year = %s \
+        WHERE b.user_id = %s AND b.month_year = %s \
         ORDER BY t.transaction_date DESC;"
         self.cursor.execute(sql, (user_id, month))
-        expenses = self.cursor.fetchall()
-        return expenses
+        return self.cursor.fetchall()
 
-    def add_expense(self, name, category_name, cost, date):
-        self.cursor.execute("SELECT category_id FROM category WHERE cat_name = %s LIMIT 1", (category_name,))
+    # def add_expense(self, name, category_name, cost, date):
+    #     self.cursor.execute("SELECT category_id FROM category WHERE cat_name = %s LIMIT 1", (category_name,))
+    #     result = self.cursor.fetchone()
+    #     cat_id = result["category_id"]
+    #     sql = "INSERT INTO transactions (category_id, amount, merchant_name, transaction_date, created_at) VALUES (%s, %s, %s, %s, %s)"
+    #     self.cursor.execute(sql, (cat_id, cost, name, date, datetime.today().strftime("%Y-%m-%d")))
+    #     self.conn.commit()
+    #     return self.cursor.lastrowid
+
+    def add_expense(self, user_id, name, category_name, cost, date):
+        month_str = date[:7]  # Extracts 'YYYY-MM' from 'YYYY-MM-DD'
+
+        sql_find_cat = """
+            SELECT c.category_id 
+            FROM category c
+            JOIN budget b ON c.budget_id = b.budget_id
+            WHERE b.user_id = %s AND b.month_year = %s AND c.cat_name = %s
+            LIMIT 1
+        """
+        self.cursor.execute(sql_find_cat, (user_id, month_str, category_name))
         result = self.cursor.fetchone()
+
+        if not result:
+            return None  # Handle case where budget/category isn't set up yet
+
         cat_id = result["category_id"]
-        sql = "INSERT INTO transactions (category_id, amount, merchant_name, transaction_date, created_at) VALUES (%s, %s, %s, %s, %s)"
-        self.cursor.execute(sql, (cat_id, cost, name, date, datetime.today().strftime("%Y-%m-%d")))
+
+        # 2. Insert the transaction
+        sql_insert = """
+            INSERT INTO transactions (category_id, amount, merchant_name, transaction_date, created_at) 
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        self.cursor.execute(sql_insert, (cat_id, cost, name, date, datetime.today().strftime("%Y-%m-%d")))
         self.conn.commit()
         return self.cursor.lastrowid
 

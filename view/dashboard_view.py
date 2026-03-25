@@ -17,7 +17,7 @@ It only:
 TODO: Connect to Controller once expense controller functions are implemented.
 """
 
-from flask import Blueprint, request, render_template_string, redirect, url_for
+from flask import Blueprint, request, render_template_string, redirect, url_for, session
 from datetime import datetime, timedelta
 from controller import get_user_expenses, add_expense, update_transaction, delete_transaction
 
@@ -500,7 +500,11 @@ def show_dashboard():
     GET /dashboard
     Show the expense dashboard with summaries and expense list.
     """
-    expenses = get_user_expenses(1, "2026-03")
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login.show_login_form"))
+
+    expenses = get_user_expenses(user_id, "2026-03")
     summary = _compute_summaries(expenses)
     today = datetime.today().strftime("%Y-%m-%d")
 
@@ -521,6 +525,10 @@ def handle_add_expense():
     POST /dashboard/add
     Add a new expense via the controller.
     """
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login.show_login_form"))
+
     name = request.form.get("name", "").strip()
     category = request.form.get("category", "")
     cost = request.form.get("cost", "0")
@@ -538,7 +546,7 @@ def handle_add_expense():
                                 message="Cost must be a valid number.",
                                 success="false"))
 
-    add_expense(name, category, cost, date)
+    add_expense(user_id, name, category, cost, date)
 
     return redirect(url_for("dashboard.show_dashboard",
                             message="Expense added!",

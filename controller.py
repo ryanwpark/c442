@@ -14,7 +14,9 @@ def register_user(username, password, verify_password):
     if existing:
         return {"success": False, "message": "Username already taken."}
     password_hash = hashlib.sha256(password.encode()).hexdigest()
-    model.create_user(username, username + "@email.com", password_hash)
+    user_id = model.create_user(username, username + "@email.com", password_hash)
+
+    set_user_defaults(user_id)
     return {"success": True, "message": "Account created!"}
 
 def login_user(username, password):
@@ -32,6 +34,20 @@ def login_user(username, password):
 
 def create_user(username, email, password_hash):
     return model.create_user(username, email, password_hash)
+
+
+def set_user_defaults(user_id):
+    # Creates a default budget for the current month
+    from datetime import datetime
+    current_month = datetime.today().strftime("%Y-%m-%d")[:7]  # e.g., "2026-03"
+
+    # 1. Create the budget record (default income: 0.00)
+    budget_id = model.create_budget(user_id, current_month, 0.00)
+
+    # 2. Create default categories linked to this budget
+    default_categories = ["Housing", "Food", "Transport", "Entertainment", "Utilities", "Health", "Shopping", "Other"]
+    for cat in default_categories:
+        model.create_category(budget_id, cat, 0.00)
 
 def get_user(user_id):
     return model.get_user(user_id)
@@ -66,8 +82,8 @@ def get_budget_categories(budget_id):
 def get_user_expenses(user_id, month_year):
     return model.get_user_expenses(user_id, month_year)
 
-def add_expense(name, category_name, cost, date):
-    return model.add_expense(name, category_name, cost, date)
+def add_expense(user_id, name, category_name, cost, date):
+    return model.add_expense(user_id, name, category_name, cost, date)
 
 def update_transaction(transaction_id, category_id, amount, merchant_name, date):
     return model.update_transaction(transaction_id, category_id, amount, merchant_name, date)
