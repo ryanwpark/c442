@@ -352,6 +352,10 @@ DASHBOARD_HTML = """
 </head>
 <body>
     <div class="container">
+    <div class="container">
+    <div style="text-align: right; margin-bottom: 10px;">
+        <a href="/logout" style="color: #e74c3c; text-decoration: none; font-weight: bold;">Logout</a>
+    </div>
         <h1>Expense Dashboard</h1>
 
         <!-- ── Summary Cards ── -->

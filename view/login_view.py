@@ -13,7 +13,7 @@ It only:
   3. Displays the result message back to the user
 """
 
-from flask import Blueprint, request, render_template_string, redirect, session
+from flask import Blueprint, request, render_template_string, redirect, session, url_for
 from controller import login_user
 
 # Blueprint for login routes
@@ -208,3 +208,8 @@ def handle_login():
         message=result["message"],
         success=result["success"]
     )
+
+@login_blueprint.route("/logout")
+def logout():
+    session.clear() # Removes user_id and all other session data
+    return redirect(url_for("login.show_login_form", message="Logged out successfully.", success="true"))
