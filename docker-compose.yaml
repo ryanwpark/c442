@@ -8,6 +8,7 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: budget_db
+      MYSQL_ROOT_HOST: '%'
     ports:
       - "3306:3306"
     volumes:
@@ -51,7 +52,7 @@ services:
       - "3000:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s:%(http_port)s/grafana/
+      - GF_SERVER_ROOT_URL=http://${GRAFANA_HOST}/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
     networks:
       - budget_net
