@@ -78,15 +78,6 @@ class BudgetModel:
         self.cursor.execute(sql, (user_id, month))
         return self.cursor.fetchall()
 
-    # def add_expense(self, name, category_name, cost, date):
-    #     self.cursor.execute("SELECT category_id FROM category WHERE cat_name = %s LIMIT 1", (category_name,))
-    #     result = self.cursor.fetchone()
-    #     cat_id = result["category_id"]
-    #     sql = "INSERT INTO transactions (category_id, amount, merchant_name, transaction_date, created_at) VALUES (%s, %s, %s, %s, %s)"
-    #     self.cursor.execute(sql, (cat_id, cost, name, date, datetime.today().strftime("%Y-%m-%d")))
-    #     self.conn.commit()
-    #     return self.cursor.lastrowid
-
     def add_expense(self, user_id, name, category_name, cost, date):
         month_str = date[:7]  # Extracts 'YYYY-MM' from 'YYYY-MM-DD'
 
