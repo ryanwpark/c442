@@ -14,7 +14,7 @@ It only:
 """
 
 from flask import Blueprint, request, render_template_string
-from controller.controller import register_user
+from controller import register_user
 
 view_blueprint = Blueprint("view", __name__)
 

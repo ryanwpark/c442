@@ -26,6 +26,11 @@ class BudgetModel:
         self.cursor.execute(sql)
         return self.cursor.fetchall()
 
+    def get_user_by_username(self, username):
+        sql = "SELECT * FROM user WHERE username = %s"
+        self.cursor.execute(sql, (username,))
+        return self.cursor.fetchone()
+
     #--- Budgets ---
 
     def create_budget(self, user_id, month_year, income):

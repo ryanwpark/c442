@@ -14,9 +14,7 @@ It only:
 """
 
 from flask import Blueprint, request, render_template_string, redirect
-
-# TODO: Uncomment the line below once the Controller team adds a login_user function
-# from controller.controller import login_user
+from controller import login_user
 
 # Blueprint for login routes
 login_blueprint = Blueprint("login", __name__)
@@ -197,14 +195,7 @@ def handle_login():
     password = request.form.get("password", "")
 
     # Step 2: Send it to the controller
-    # TODO: Uncomment once the Controller team adds login_user()
-    # result = login_user(username, password)
-
-    # TEMPORARY: placeholder until Controller is ready
-    result = {
-        "success": False,
-        "message": "Login not yet connected — waiting for Controller team to add login_user()."
-    }
+    result = login_user(username, password)
 
     # Step 3: If login succeeded, redirect to the home page
     if result["success"]:

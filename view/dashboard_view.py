@@ -19,26 +19,15 @@ TODO: Connect to Controller once expense controller functions are implemented.
 
 from flask import Blueprint, request, render_template_string, redirect, url_for
 from datetime import datetime, timedelta
-from controller import get_dashboard_data
+from controller import get_dashboard_data, add_expense, update_transaction, delete_transaction
 
 # Blueprint for dashboard routes
 dashboard_blueprint = Blueprint("dashboard", __name__)
 
 
 # ──────────────────────────────────────────────
-# PLACEHOLDER DATA (until Controller/Model are connected)
+# CONSTANTS
 # ──────────────────────────────────────────────
-
-# In-memory list so we can demo add/edit/delete without a database
-_sample_expenses = [
-    {"id": 1, "name": "Grocery Run",       "category": "Food",          "cost": 52.30,  "date": "2026-03-23"},
-    {"id": 2, "name": "Bus Pass",          "category": "Transport",     "cost": 25.00,  "date": "2026-03-22"},
-    {"id": 3, "name": "Netflix",           "category": "Entertainment", "cost": 15.99,  "date": "2026-03-20"},
-    {"id": 4, "name": "Electric Bill",     "category": "Utilities",     "cost": 87.50,  "date": "2026-03-18"},
-    {"id": 5, "name": "Gym Membership",    "category": "Health",        "cost": 40.00,  "date": "2026-03-15"},
-    {"id": 6, "name": "New Headphones",    "category": "Shopping",      "cost": 79.99,  "date": "2026-03-10"},
-]
-_next_id = 7
 
 # Categories for the dropdown
 CATEGORIES = [
@@ -53,14 +42,8 @@ CATEGORIES = [
 
 
 # ──────────────────────────────────────────────
-# HELPER FUNCTIONS (temporary, until Controller)
+# HELPER FUNCTIONS
 # ──────────────────────────────────────────────
-
-def _get_all_expenses():
-    """Return all expenses (placeholder)."""
-    return list(_sample_expenses)
-
-
 def _compute_summaries(expenses):
     """
     Compute monthly, weekly, and daily totals.
@@ -533,21 +516,16 @@ def show_dashboard():
 
 
 @dashboard_blueprint.route("/dashboard/add", methods=["POST"])
-def add_expense():
+def handle_add_expense():
     """
     POST /dashboard/add
-    Add a new expense from the form.
-
-    TODO: Replace with controller call once controller is implemented.
+    Add a new expense via the controller.
     """
-    global _next_id
-
     name = request.form.get("name", "").strip()
     category = request.form.get("category", "")
     cost = request.form.get("cost", "0")
     date = request.form.get("date", "")
 
-    # Basic validation (will move to controller later)
     if not name or not category or not date:
         return redirect(url_for("dashboard.show_dashboard",
                                 message="All fields are required.",
@@ -560,14 +538,7 @@ def add_expense():
                                 message="Cost must be a valid number.",
                                 success="false"))
 
-    _sample_expenses.append({
-        "id": _next_id,
-        "name": name,
-        "category": category,
-        "cost": cost,
-        "date": date,
-    })
-    _next_id += 1
+    add_expense(name, category, cost, date)
 
     return redirect(url_for("dashboard.show_dashboard",
                             message="Expense added!",
@@ -578,9 +549,7 @@ def add_expense():
 def edit_expense(expense_id):
     """
     POST /dashboard/edit/<id>
-    Update an existing expense.
-
-    TODO: Replace with controller call once controller is implemented.
+    Update an existing expense via the controller.
     """
     name = request.form.get("name", "").strip()
     category = request.form.get("category", "")
@@ -599,34 +568,32 @@ def edit_expense(expense_id):
                                 message="Cost must be a valid number.",
                                 success="false"))
 
-    for exp in _sample_expenses:
-        if exp["id"] == expense_id:
-            exp["name"] = name
-            exp["category"] = category
-            exp["cost"] = cost
-            exp["date"] = date
-            return redirect(url_for("dashboard.show_dashboard",
-                                    message="Expense updated!",
-                                    success="true"))
+    # Look up category_id from the category name for the update
+    from model import BudgetModel
+    m = BudgetModel()
+    m.cursor.execute("SELECT category_id FROM category WHERE cat_name = %s LIMIT 1", (category,))
+    cat_row = m.cursor.fetchone()
+    if not cat_row:
+        return redirect(url_for("dashboard.show_dashboard",
+                                message="Category not found.",
+                                success="false"))
+
+    update_transaction(expense_id, cat_row["category_id"], cost, name, date)
 
     return redirect(url_for("dashboard.show_dashboard",
-                            message="Expense not found.",
-                            success="false"))
+                            message="Expense updated!",
+                            success="true"))
 
 
 @dashboard_blueprint.route("/dashboard/delete/<int:expense_id>", methods=["POST"])
-def delete_expense(expense_id):
+def handle_delete_expense(expense_id):
     """
     POST /dashboard/delete/<id>
-    Delete an expense by its ID.
-
-    TODO: Replace with controller call once controller is implemented.
+    Delete an expense via the controller.
     """
-    global _sample_expenses
-    original_len = len(_sample_expenses)
-    _sample_expenses = [e for e in _sample_expenses if e["id"] != expense_id]
+    rows_deleted = delete_transaction(expense_id)
 
-    if len(_sample_expenses) < original_len:
+    if rows_deleted > 0:
         return redirect(url_for("dashboard.show_dashboard",
                                 message="Expense deleted.",
                                 success="true"))

@@ -1,6 +1,32 @@
 from model import BudgetModel
+import hashlib
 
 model = BudgetModel()
+
+# --- Auth ---
+
+def register_user(username, password, verify_password):
+    if not username or not password:
+        return {"success": False, "message": "Username and password are required."}
+    if password != verify_password:
+        return {"success": False, "message": "Passwords do not match."}
+    existing = model.get_user_by_username(username)
+    if existing:
+        return {"success": False, "message": "Username already taken."}
+    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    model.create_user(username, username + "@email.com", password_hash)
+    return {"success": True, "message": "Account created!"}
+
+def login_user(username, password):
+    if not username or not password:
+        return {"success": False, "message": "Username and password are required."}
+    user = model.get_user_by_username(username)
+    if not user:
+        return {"success": False, "message": "User not found."}
+    password_hash = hashlib.sha256(password.encode()).hexdigest()
+    if user["password_hash"] != password_hash:
+        return {"success": False, "message": "Wrong password."}
+    return {"success": True, "message": "Login successful.", "user_id": user["user_id"]}
 
 # --- Users ---
 
