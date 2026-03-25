@@ -70,7 +70,7 @@ class BudgetModel:
     #--- Transactions ---
 
     def get_user_expenses(self, user_id, month):
-        sql = "SELECT t.transaction_id, t.merchant_name AS name, c.cat_name AS category, t.amount as cost, t.transaction_date AS date \
+        sql = "SELECT t.transaction_id AS id, t.merchant_name AS name, c.cat_name AS category, t.amount as cost, t.transaction_date AS date \
         FROM transactions t JOIN category c ON t.category_id = c.category_id \
         JOIN budget b ON c.budget_id = b.budget_id \
         WHERE b.user_id = %s AND b.month_year = %s \
