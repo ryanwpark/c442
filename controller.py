@@ -8,7 +8,11 @@ model = BudgetModel()
 TRANSACTION_COUNT = Counter('budget_transactions_total', 'Total expenses logged')
 # Track the total dollar amount spent (Gauge)
 TOTAL_SPENT = Gauge('budget_dollars_spent_total', 'Total cumulative spending across all users')
-
+FAILED_LOGINS = Counter('budget_login_failures_total', 'Number of failed login attempts')
+# Track unique logins
+USER_LOGIN_TRACKER = Counter('budget_user_login_total', 'Logins tracked by user ID', ['user_id'])
+# Track login attempts
+LOGIN_ATTEMPTS = Counter('budget_login_attempts_total', 'Total login attempts (success + failure)', ['result'])
 # --- Auth ---
 
 def register_user(username, password, verify_password):
@@ -30,10 +34,19 @@ def login_user(username, password):
         return {"success": False, "message": "Username and password are required."}
     user = model.get_user_by_username(username)
     if not user:
+        FAILED_LOGINS.inc()
+        LOGIN_ATTEMPTS.labels(result='failure').inc()
         return {"success": False, "message": "User not found."}
     password_hash = hashlib.sha256(password.encode()).hexdigest()
     if user["password_hash"] != password_hash:
+        FAILED_LOGINS.inc()
+        LOGIN_ATTEMPTS.labels(result='failure').inc()
         return {"success": False, "message": "Wrong password."}
+
+    # Track successful logins
+    LOGIN_ATTEMPTS.labels(result='success').inc()  # Label for percentage
+    USER_LOGIN_TRACKER.labels(user_id=user["user_id"]).inc()  # Track THIS specific user
+
     return {"success": True, "message": "Login successful.", "user_id": user["user_id"]}
 
 # --- Users ---
