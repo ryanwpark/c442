@@ -9,7 +9,6 @@ class BudgetModel:
 
     #--- Users ---
 
-
     def create_user(self, username, email, password_hash):
         sql = "INSERT INTO user (username, email, password_hash) VALUES (%s, %s, %s)"
         self.cursor.execute(sql, (username, email, password_hash))
@@ -67,52 +66,40 @@ class BudgetModel:
         self.cursor.execute(sql, (budget_id,))
         return self.cursor.fetchall()
 
-    #--- Transactions ---
+    #--- Expenses (Transactions) ---
 
     def get_user_expenses(self, user_id, month):
-        sql = "SELECT t.transaction_id, t.merchant_name AS name, c.cat_name AS category, t.amount as cost, t.transaction_date AS date \
-        FROM transactions t JOIN category c ON t.category_id = c.category_id \
-        JOIN budget b ON c.budget_id = b.budget_id \
-        WHERE b.user_id = %s AND b.month_year = %s \
-        ORDER BY t.transaction_date DESC;"
+        sql = "SELECT Expense.ExpenseID AS transaction_id, Expense.Description AS name, Category.CategoryName AS category, Expense.AmountSpent AS cost, Expense.ExpenseDate AS date " \
+              "FROM Expense JOIN Category ON Expense.CategoryID = Category.CategoryID " \
+              "WHERE Expense.UserID = %s AND DATE_FORMAT(Expense.ExpenseDate, '%Y-%m') = %s " \
+              "ORDER BY Expense.ExpenseDate DESC;"
         self.cursor.execute(sql, (user_id, month))
         return self.cursor.fetchall()
 
     def add_expense(self, user_id, name, category_name, cost, date):
-        month_str = date[:7]  # Extracts 'YYYY-MM' from 'YYYY-MM-DD'
-
-        sql_find_cat = """
-            SELECT c.category_id 
-            FROM category c
-            JOIN budget b ON c.budget_id = b.budget_id
-            WHERE b.user_id = %s AND b.month_year = %s AND c.cat_name = %s
-            LIMIT 1
-        """
-        self.cursor.execute(sql_find_cat, (user_id, month_str, category_name))
+        self.cursor.execute("SELECT CategoryID FROM Category WHERE UserID = %s AND CategoryName = %s LIMIT 1", (user_id, category_name))
         result = self.cursor.fetchone()
-
         if not result:
-            return None  # Handle case where budget/category isn't set up yet
-
-        cat_id = result["category_id"]
-
-        # 2. Insert the transaction
-        sql_insert = """
-            INSERT INTO transactions (category_id, amount, merchant_name, transaction_date, created_at) 
-            VALUES (%s, %s, %s, %s, %s)
-        """
-        self.cursor.execute(sql_insert, (cat_id, cost, name, date, datetime.today().strftime("%Y-%m-%d")))
+            return None
+        cat_id = result["CategoryID"]
+        sql = "INSERT INTO Expense (UserID, CategoryID, AmountSpent, Description, ExpenseDate) VALUES (%s, %s, %s, %s, %s)"
+        self.cursor.execute(sql, (user_id, cat_id, cost, name, date))
         self.conn.commit()
         return self.cursor.lastrowid
 
-    def update_transaction(self, transaction_id, category_id, amount, merchant_name, transaction_date):
-        sql = "UPDATE transactions SET category_id = %s, amount = %s, merchant_name = %s, transaction_date = %s WHERE transaction_id = %s"
-        self.cursor.execute(sql, (category_id, amount, merchant_name, transaction_date, transaction_id))
+    def update_transaction(self, user_id, transaction_id, category_name, amount, merchant_name, transaction_date):
+        self.cursor.execute("SELECT CategoryID FROM Category WHERE UserID = %s AND CategoryName = %s LIMIT 1", (user_id, category_name))
+        result = self.cursor.fetchone()
+        if not result:
+            return 0
+        cat_id = result["CategoryID"]
+        sql = "UPDATE Expense SET CategoryID = %s, AmountSpent = %s, Description = %s, ExpenseDate = %s WHERE ExpenseID = %s AND UserID = %s"
+        self.cursor.execute(sql, (cat_id, amount, merchant_name, transaction_date, transaction_id, user_id))
         self.conn.commit()
         return self.cursor.rowcount
 
-    def delete_transaction(self, transaction_id):
-        sql = "DELETE FROM transactions WHERE transaction_id = %s"
-        self.cursor.execute(sql, (transaction_id,))
+    def delete_transaction(self, user_id, transaction_id):
+        sql = "DELETE FROM Expense WHERE ExpenseID = %s AND UserID = %s"
+        self.cursor.execute(sql, (transaction_id, user_id))
         self.conn.commit()
         return self.cursor.rowcount

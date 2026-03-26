@@ -580,17 +580,11 @@ def edit_expense(expense_id):
                                 message="Cost must be a valid number.",
                                 success="false"))
 
-    # Look up category_id from the category name for the update
-    from model import BudgetModel
-    m = BudgetModel()
-    m.cursor.execute("SELECT category_id FROM category WHERE cat_name = %s LIMIT 1", (category,))
-    cat_row = m.cursor.fetchone()
-    if not cat_row:
-        return redirect(url_for("dashboard.show_dashboard",
-                                message="Category not found.",
-                                success="false"))
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login.show_login_form"))
 
-    update_transaction(expense_id, cat_row["category_id"], cost, name, date)
+    update_transaction(user_id, expense_id, category, cost, name, date)
 
     return redirect(url_for("dashboard.show_dashboard",
                             message="Expense updated!",
@@ -603,7 +597,11 @@ def handle_delete_expense(expense_id):
     POST /dashboard/delete/<id>
     Delete an expense via the controller.
     """
-    rows_deleted = delete_transaction(expense_id)
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login.show_login_form"))
+
+    rows_deleted = delete_transaction(user_id, expense_id)
 
     if rows_deleted > 0:
         return redirect(url_for("dashboard.show_dashboard",
