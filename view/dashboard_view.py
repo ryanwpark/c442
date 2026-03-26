@@ -447,10 +447,10 @@ DASHBOARD_HTML = """
                         <td>{{ exp.date }}</td>
                         <td class="actions">
                             <button class="btn-edit"
-                                    onclick="startEdit({{ exp.id }}, '{{ exp.name }}', '{{ exp.category }}', {{ exp.cost }}, '{{ exp.date }}')">
+                                    onclick="startEdit({{ exp.transaction_id }}, '{{ exp.name|replace(\"'\", \"\\\\'\") }}', '{{ exp.category }}', {{ exp.cost }}, '{{ exp.date }}')">
                                 Edit
                             </button>
-                            <form method="POST" action="/dashboard/delete/{{ exp.id }}"
+                            <form method="POST" action="/dashboard/delete/{{ exp.transaction_id }}"
                                   style="display:inline;"
                                   onsubmit="return confirm('Delete this expense?');">
                                 <button type="submit" class="btn-delete">✕</button>
