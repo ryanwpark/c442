@@ -7,7 +7,7 @@ model = BudgetModel()
 # Track every time a transaction is added
 TRANSACTION_COUNT = Counter('budget_transactions_total', 'Total expenses logged')
 # Track the total dollar amount spent (Gauge)
-TOTAL_SPENT = Gauge('budget_dollars_spent_total', 'Total cumulative spending across all users')
+TOTAL_SPENT = Gauge('budget_dollars_spent_total', 'Total spending across all users', ['category'])
 FAILED_LOGINS = Counter('budget_login_failures_total', 'Number of failed login attempts')
 # Track unique logins
 USER_LOGIN_TRACKER = Counter('budget_user_login_total', 'Logins tracked by user ID', ['user_id'])
@@ -107,7 +107,7 @@ def add_expense(user_id, name, category_name, cost, date):
     if result:
         TRANSACTION_COUNT.inc()
         try:
-            TOTAL_SPENT.inc(float(cost))
+            TOTAL_SPENT.labels(category=category_name).inc(float(cost))
         except (ValueError, TypeError):
             pass
 
