@@ -1,7 +1,13 @@
 from model import BudgetModel
+from prometheus_client import Counter, Gauge
 import hashlib
 
 model = BudgetModel()
+
+# Track every time a transaction is added
+TRANSACTION_COUNT = Counter('budget_transactions_total', 'Total expenses logged')
+# Track the total dollar amount spent (Gauge)
+TOTAL_SPENT = Gauge('budget_dollars_spent_total', 'Total cumulative spending across all users')
 
 # --- Auth ---
 
@@ -83,7 +89,16 @@ def get_user_expenses(user_id, month_year):
     return model.get_user_expenses(user_id, month_year)
 
 def add_expense(user_id, name, category_name, cost, date):
-    return model.add_expense(user_id, name, category_name, cost, date)
+    result = model.add_expense(user_id, name, category_name, cost, date)
+    # Increment metrics if the DB insert was successful
+    if result:
+        TRANSACTION_COUNT.inc()
+        try:
+            TOTAL_SPENT.inc(float(cost))
+        except (ValueError, TypeError):
+            pass
+
+    return result
 
 def update_transaction(user_id, transaction_id, category_id, amount, merchant_name, date):
     return model.update_transaction(user_id, transaction_id, category_id, amount, merchant_name, date)
