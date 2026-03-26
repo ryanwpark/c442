@@ -85,8 +85,8 @@ def get_user_expenses(user_id, month_year):
 def add_expense(user_id, name, category_name, cost, date):
     return model.add_expense(user_id, name, category_name, cost, date)
 
-def update_transaction(transaction_id, category_id, amount, merchant_name, date):
-    return model.update_transaction(transaction_id, category_id, amount, merchant_name, date)
+def update_transaction(user_id, transaction_id, category_id, amount, merchant_name, date):
+    return model.update_transaction(user_id, transaction_id, category_id, amount, merchant_name, date)
 
-def delete_transaction(transaction_id):
-    return model.delete_transaction(transaction_id)
+def delete_transaction(user_id, transaction_id):
+    return model.delete_transaction(user_id, transaction_id)
